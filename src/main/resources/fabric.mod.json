@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "wallpaper_menu",
+  "version": "${version}",
+  "name": "Wallpaper Menu",
+  "description": "Wallpaper Engine media backgrounds for Minecraft menus.",
+  "authors": ["WallpaperMenu"],
+  "contact": {},
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "dev.wallpapermenu.WallpaperMenuClient"
+    ],
+    "modmenu": [
+      "dev.wallpapermenu.WallpaperMenuModMenu"
+    ]
+  },
+  "mixins": [
+    "wallpaper_menu.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.10",
+    "minecraft": "1.21.1",
+    "java": ">=21",
+    "fabric-api": "*",
+    "modmenu": ">=11.0.5"
+  }
+}

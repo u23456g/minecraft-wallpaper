@@ -1,0 +1,9 @@
+{
+  "required": true,
+  "package": "dev.wallpapermenu.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": ["TitleScreenMixin", "ScreenMixin", "WebInputMixin", "ScreenWebInputMixin", "DownloadingTerrainScreenMixin", "PressableWidgetMixin"],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
