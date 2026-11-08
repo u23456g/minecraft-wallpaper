@@ -1,11 +1,11 @@
 # Wallpaper Menu (Fabric 1.21.1)
 
-将本机 Wallpaper Engine 壁纸用于 Minecraft 菜单背景。当前为 **0.1.1 实验性预发布版**，主要在 Windows 上开发验证。
+将本机 Wallpaper Engine 壁纸用于 Minecraft 菜单背景。当前为 **0.1.2 实验性预发布版**，主要在 Windows 上开发验证。
 
 ## 安装
 
 1. 安装 Minecraft **1.21.1**、Java **21** 与 Fabric Loader **0.16.10**。
-2. 将 Release 中的 `wallpaper-menu-0.1.1.jar`、Fabric API **0.116.1+1.21.1**、Mod Menu **11.0.5** 放入游戏 `mods` 目录。
+2. 将 Release 中的 `wallpaper-menu-0.1.2.jar`、Fabric API **0.116.1+1.21.1**、Mod Menu **11.0.5** 放入游戏 `mods` 目录。
 3. 视频/音频播放需要系统 PATH 中可执行的 **FFmpeg**，不随本模组分发。
 4. 网页壁纸需要安装 Microsoft Edge 或 Google Chrome。
 5. 场景壁纸需要 Windows 和已安装、可运行的 **Wallpaper Engine**；本模组不是独立 scene.pkg 渲染器。
@@ -13,7 +13,11 @@
 
 ### 整合包预设壁纸
 
-整合包可以在游戏 `config/wallpaper-menu/pack.json` 提供：
+在设置页先选中壁纸，再点击底部“设为整合包默认”，即可自动生成预设，无需手写 JSON。未选中可用壁纸时按钮禁用。发布整合包时保留生成的 `config/wallpaper-menu/pack.json`；不需要附上作者本机的 `wallpaper-menu.json`（其中可能含绝对路径及个人设置）。按钮导出壁纸 ID 以及当前暗化、捕获帧率、音乐响度、毛玻璃开关、按钮透明度、标题大小与标题透明度；导出操作不包含本机目录、个人退出预设状态或第三方资源；玩家端可按下述流程自动请求 Steam 下载，不自动订阅。外观和音量参数仅在玩家尚无有效个人配置时应用，之后保留玩家自己的设置。接收者本机已有相同 ID 的项目时自动应用，缺资源时使用原版背景。玩家已有选择及恢复原版的退出设置仍优先。
+
+选择 Steam Workshop 项目后点击此按钮，还会自动记录 Workshop ID 和标题。新玩家缺少该资源时，Windows 上模组会自动调用玩家本机 Steam.exe 的 `-silent +workshop_download_item 431960 <ID>`，而不是仅打开网页；不主动打开控制台，Steam 未运行时会尝试静默启动。登录、Steam Guard、更新提示仍可能显示，不能保证所有情况下无窗口；每次启动自动请求一次，失败可在获取页面点“重试自动下载”。需要 Steam 已登录且拥有 Wallpaper Engine，项目访问与下载由 Steam 决定；不处理凭据、不自动订阅、不绕过权限。页面保留订阅链接与跳过入口，不阻止游戏。读取本次 Steam workshop_log.txt 的目标项目成功/失败结果，最长等待 10 分钟；Steam 报告成功后每 10 秒扫描可识别项目并自动匹配。命令返回零不被当作下载成功，实际渲染仍取决于文件与后端兼容。旧预设需由作者重新点击按钮导出，才包含来源元数据。目前实机验证覆盖已有订阅项目的重新下载请求与新日志 OK，尚未完成全新缺失项目的游戏内下载验收。
+
+也可以手动在游戏 `config/wallpaper-menu/pack.json` 提供：
 
 ```json
 {

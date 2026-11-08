@@ -21,6 +21,37 @@ public final class WallpaperMenuClient implements ClientModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
     private Double originalMusicVolume;
+    private boolean workshopScanRunning, workshopNoticeShown;
+    private long nextWorkshopScan;
+    private boolean downloadAttempted;
+    public static volatile boolean workshopDownloadRunning;
+    public static volatile String verifiedWorkshopDownload = "";
+    public static volatile String workshopDownloadStatus = "等待 Steam 下载";
+
+    public static void requestWorkshopDownload() {
+        if (workshopDownloadRunning || !CONFIG.needsWorkshop(WALLPAPERS)) return;
+        workshopDownloadRunning = true;
+        verifiedWorkshopDownload = "";
+        workshopDownloadStatus = "正在请求 Steam 下载…";
+        String item = CONFIG.workshopItemId;
+        java.util.concurrent.CompletableFuture.runAsync(() -> {
+            try {
+                dev.wallpapermenu.wallpaper.SteamWorkshopDownload.request(defaultSteamRoots(), item);
+                verifiedWorkshopDownload = item;
+                workshopDownloadStatus = "Steam 报告下载成功，等待本地扫描…";
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+                workshopDownloadStatus = "下载等待已中断，可重试";
+            } catch (Exception exception) {
+                workshopDownloadStatus = exception.getMessage();
+                LOGGER.warn("Steam Workshop download request failed", exception);
+            } finally {
+                workshopDownloadRunning = false;
+            }
+        });
+    }
+    private volatile boolean stopping;
+    public static volatile boolean initialScanComplete;
     public static volatile WallpaperConfig CONFIG;
     public static volatile List<WallpaperEntry> WALLPAPERS = List.of();
 
@@ -31,6 +62,7 @@ public final class WallpaperMenuClient implements ClientModInitializer {
         CONFIG = WallpaperConfig.load(configFile);
         applyPackManifest(FabricLoader.getInstance().getConfigDir());
         net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            checkWorkshop(client);
             var music = client.options.getSoundVolumeOption(net.minecraft.sound.SoundCategory.MUSIC);
             if (CONFIG.audioVolume() > 0) {
                 if (originalMusicVolume == null) originalMusicVolume = music.getValue();
@@ -43,6 +75,7 @@ public final class WallpaperMenuClient implements ClientModInitializer {
             if (client.currentScreen == null || client.currentScreen instanceof GameMenuScreen) WallpaperBackground.close();
         });
         net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents.CLIENT_STOPPING.register(client -> {
+            stopping = true;
             WallpaperBackground.shutdown();
             if (originalMusicVolume != null) {
                 client.options.getSoundVolumeOption(net.minecraft.sound.SoundCategory.MUSIC).setValue(originalMusicVolume);
@@ -72,12 +105,48 @@ public final class WallpaperMenuClient implements ClientModInitializer {
         java.util.concurrent.CompletableFuture.supplyAsync(() -> new WallpaperScanner().scan(config.wallpaperRoots(configDirectory)))
                 .thenAccept(entries -> {
                     WALLPAPERS = List.copyOf(entries);
+                    initialScanComplete = true;
                     LOGGER.info("Wallpaper Menu found {} supported wallpaper(s)", WALLPAPERS.stream().filter(WallpaperEntry::supported).count());
                 })
                 .exceptionally(error -> {
+                    initialScanComplete = true;
                     LOGGER.warn("Wallpaper scan failed; keeping vanilla menu background", error);
                     return null;
                 });
+    }
+
+    private void checkWorkshop(net.minecraft.client.MinecraftClient client) {
+        if (stopping || !initialScanComplete || !CONFIG.needsWorkshop(WALLPAPERS)) return;
+        if (!downloadAttempted) {
+            downloadAttempted = true;
+            requestWorkshopDownload();
+        }
+        if (!workshopNoticeShown && client.currentScreen instanceof net.minecraft.client.gui.screen.TitleScreen) {
+            workshopNoticeShown = true;
+            client.setScreen(new WorkshopWallpaperScreen(client.currentScreen));
+        }
+        long now = System.nanoTime();
+        if (workshopScanRunning || now < nextWorkshopScan) return;
+        workshopScanRunning = true;
+        nextWorkshopScan = now + java.util.concurrent.TimeUnit.SECONDS.toNanos(10);
+        var roots = CONFIG.wallpaperRoots(FabricLoader.getInstance().getConfigDir());
+        String wanted = CONFIG.selectedWallpaperId;
+        java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+            var all = new java.util.LinkedHashSet<>(roots);
+            all.addAll(SteamWallpaperLocator.discover(defaultSteamRoots()));
+            return new WallpaperScanner().scan(List.copyOf(all));
+        }).whenComplete((entries, error) -> client.execute(() -> {
+            workshopScanRunning = false;
+            if (stopping) return;
+            if (error != null) {
+                LOGGER.debug("Workshop wallpaper detection failed; will retry", error);
+            } else if (CONFIG.needsWorkshop(WALLPAPERS) && wanted.equals(CONFIG.selectedWallpaperId)
+                    && wanted.equals(verifiedWorkshopDownload) && !workshopDownloadRunning
+                    && entries.stream().anyMatch(entry -> entry.supported() && wanted.equals(entry.id()))) {
+                WALLPAPERS = List.copyOf(entries);
+                LOGGER.info("Workshop wallpaper {} is now locally available", wanted);
+            }
+        }));
     }
 
     private static void applyPackManifest(Path configDirectory) {

@@ -74,6 +74,21 @@ public final class WallpaperSettingsScreen extends Screen {
                 .dimensions(gridLeft + cardWidth + 6, pagingY, cardWidth, 20).build();
         next.active = page + 1 < pages;
         addDrawableChild(next);
+        ButtonWidget export = ButtonWidget.builder(Text.literal("设为整合包默认"), button -> {
+            try {
+                var selected = WallpaperMenuClient.WALLPAPERS.stream()
+                        .filter(entry -> entry.supported() && entry.id().equals(WallpaperMenuClient.CONFIG.selectedWallpaperId))
+                        .findFirst().orElse(null);
+                WallpaperMenuClient.CONFIG.exportPackDefault(FabricLoader.getInstance().getConfigDir(), selected);
+                status = "已生成预设；随包保留 config/wallpaper-menu，玩家需自备壁纸";
+            } catch (IOException exception) {
+                status = "预设保存失败：" + exception.getMessage();
+                WallpaperMenuClient.LOGGER.warn("Could not export wallpaper pack default", exception);
+            }
+        }).dimensions(gridLeft + 2 * (cardWidth + 6), pagingY, cardWidth, 20).build();
+        export.active = WallpaperMenuClient.WALLPAPERS.stream().anyMatch(entry -> entry.supported()
+                && entry.id().equals(WallpaperMenuClient.CONFIG.selectedWallpaperId));
+        addDrawableChild(export);
 
         int step = Math.min(24, (height - 48) / 9);
         int y = 42;
