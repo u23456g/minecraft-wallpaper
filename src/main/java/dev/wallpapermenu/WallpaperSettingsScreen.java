@@ -110,6 +110,7 @@ public final class WallpaperSettingsScreen extends Screen {
         y += step;
         addDrawableChild(ButtonWidget.builder(Text.literal("恢复原版背景"), button -> {
             WallpaperMenuClient.CONFIG.selectedWallpaperId = "";
+            WallpaperMenuClient.CONFIG.packDefaultDisabled = true;
             WallpaperBackground.close(); saveConfig(); clearAndInit();
         }).dimensions(controlsX, y, controlsWidth, 20).build());
         addDrawableChild(ButtonWidget.builder(Text.literal("返回"), button -> close())
@@ -171,7 +172,8 @@ public final class WallpaperSettingsScreen extends Screen {
         var minecraft = client;
         CompletableFuture.supplyAsync(() -> {
             List<Path> discovered = new java.util.ArrayList<>(SteamWallpaperLocator.discover(WallpaperMenuClient.defaultSteamRoots()));
-            discovered.add(WallpaperConfig.packDirectory(FabricLoader.getInstance().getConfigDir()));
+            discovered.addAll(WallpaperMenuClient.CONFIG.wallpaperRoots(FabricLoader.getInstance().getConfigDir()));
+            discovered = new java.util.ArrayList<>(new java.util.LinkedHashSet<>(discovered));
             return new ScanResult(discovered, new WallpaperScanner().scan(discovered));
         }).whenComplete((result, error) -> minecraft.execute(() -> {
             scanning = false;

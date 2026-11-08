@@ -16,13 +16,26 @@ public final class WallpaperConfig {
     public String workshopDirectory = "";
     public String localDirectory = "";
     public String defaultWallpaperId = "";
+    public boolean packDefaultDisabled;
     public int dimPercent = 15;
 
     public boolean applyPackDefaults() {
+        if (packDefaultDisabled) return false;
         if (selectedWallpaperId != null && !selectedWallpaperId.isBlank()) return false;
         if (defaultWallpaperId == null || defaultWallpaperId.isBlank()) return false;
         selectedWallpaperId = defaultWallpaperId.trim();
         return true;
+    }
+
+    public void loadPackManifest(Path configDirectory) throws IOException {
+        Path file = packManifest(configDirectory);
+        if (!Files.isRegularFile(file)) return;
+        var json = com.google.gson.JsonParser.parseString(Files.readString(file)).getAsJsonObject();
+        var id = json.get("defaultWallpaperId");
+        if (id != null && id.isJsonPrimitive() && id.getAsJsonPrimitive().isString()) {
+            defaultWallpaperId = id.getAsString();
+            applyPackDefaults();
+        }
     }
 
     public static Path packDirectory(Path configDirectory) {

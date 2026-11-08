@@ -32,6 +32,27 @@ class WallpaperConfigTest {
     }
 
     @Test
+    void loadsPortableManifestAndScansPlayerProvidedProject() throws IOException {
+        Path manifest = WallpaperConfig.packManifest(tempDir);
+        Files.createDirectories(manifest.getParent());
+        Files.writeString(manifest, "{\"defaultWallpaperId\":\"my-wallpaper\"}");
+        Path project = Files.createDirectories(WallpaperConfig.packDirectory(tempDir).resolve("my-wallpaper"));
+        Files.writeString(project.resolve("project.json"), "{\"type\":\"video\",\"title\":\"Local\"}");
+        Files.write(project.resolve("video.mp4"), new byte[0]);
+        WallpaperConfig config = new WallpaperConfig();
+        config.loadPackManifest(tempDir);
+        assertEquals("my-wallpaper", config.selectedWallpaperId);
+        var entries = new WallpaperScanner().scan(config.wallpaperRoots(tempDir));
+        assertEquals(1, entries.size());
+        assertEquals(config.selectedWallpaperId, entries.getFirst().id());
+        assertTrue(entries.getFirst().supported());
+        config.selectedWallpaperId = "";
+        config.packDefaultDisabled = true;
+        config.loadPackManifest(tempDir);
+        assertEquals("", config.selectedWallpaperId);
+    }
+
+    @Test
     void savesAndReloadsSettingsAndFallsBackOnInvalidJson() throws IOException {
         Path file = tempDir.resolve("config/wallpaper-menu.json");
         WallpaperConfig config = new WallpaperConfig();

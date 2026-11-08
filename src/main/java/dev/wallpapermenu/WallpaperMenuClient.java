@@ -84,11 +84,7 @@ public final class WallpaperMenuClient implements ClientModInitializer {
         Path manifest = WallpaperConfig.packManifest(configDirectory);
         if (!java.nio.file.Files.isRegularFile(manifest)) return;
         try {
-            var json = com.google.gson.JsonParser.parseString(java.nio.file.Files.readString(manifest)).getAsJsonObject();
-            if (json.has("defaultWallpaperId") && json.get("defaultWallpaperId").isJsonPrimitive()) {
-                CONFIG.defaultWallpaperId = json.get("defaultWallpaperId").getAsString();
-                CONFIG.applyPackDefaults();
-            }
+            CONFIG.loadPackManifest(configDirectory);
         } catch (Exception exception) {
             LOGGER.warn("Ignoring invalid wallpaper pack manifest {}", manifest, exception);
         }

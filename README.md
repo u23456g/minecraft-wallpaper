@@ -1,11 +1,11 @@
 # Wallpaper Menu (Fabric 1.21.1)
 
-将本机 Wallpaper Engine 壁纸用于 Minecraft 菜单背景。当前为 **0.1.0 实验性预发布版**，主要在 Windows 上开发验证。
+将本机 Wallpaper Engine 壁纸用于 Minecraft 菜单背景。当前为 **0.1.1 实验性预发布版**，主要在 Windows 上开发验证。
 
 ## 安装
 
 1. 安装 Minecraft **1.21.1**、Java **21** 与 Fabric Loader **0.16.10**。
-2. 将 Release 中的 `wallpaper-menu-0.1.0.jar`、Fabric API **0.116.1+1.21.1**、Mod Menu **11.0.5** 放入游戏 `mods` 目录。
+2. 将 Release 中的 `wallpaper-menu-0.1.1.jar`、Fabric API **0.116.1+1.21.1**、Mod Menu **11.0.5** 放入游戏 `mods` 目录。
 3. 视频/音频播放需要系统 PATH 中可执行的 **FFmpeg**，不随本模组分发。
 4. 网页壁纸需要安装 Microsoft Edge 或 Google Chrome。
 5. 场景壁纸需要 Windows 和已安装、可运行的 **Wallpaper Engine**；本模组不是独立 scene.pkg 渲染器。
