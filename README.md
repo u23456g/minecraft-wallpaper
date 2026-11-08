@@ -11,6 +11,18 @@
 5. 场景壁纸需要 Windows 和已安装、可运行的 **Wallpaper Engine**；本模组不是独立 scene.pkg 渲染器。
 6. 从 Mod Menu 打开 Wallpaper Menu，扫描 Steam 壁纸后选择项目。
 
+### 整合包预设壁纸
+
+整合包可以在游戏 `config/wallpaper-menu/pack.json` 提供：
+
+```json
+{
+  "defaultWallpaperId": "Workshop项目目录ID"
+}
+```
+
+壁纸文件不随该声明分发。将玩家已经通过 Steam 订阅/合法取得的壁纸按 ID 与本地扫描结果匹配；只有玩家尚无选择时才应用此默认项，已有个人选择优先。需要用户自行提供文件时，可放入 `config/wallpaper-menu/packs/<id>/`，目录内使用 Wallpaper Engine 的 `project.json` 和原资源结构；模组会一并扫描。不要将第三方壁纸或 Workshop 文件随整合包分发，除非作者或许可证明确授权。
+
 本项目不提供 Wallpaper Engine、Minecraft、FFmpeg 或任何 Workshop 壁纸。请自行合法获取并遵守各自许可。
 
 ## 功能

@@ -15,7 +15,23 @@ public final class WallpaperConfig {
     public String selectedWallpaperId = "";
     public String workshopDirectory = "";
     public String localDirectory = "";
+    public String defaultWallpaperId = "";
     public int dimPercent = 15;
+
+    public boolean applyPackDefaults() {
+        if (selectedWallpaperId != null && !selectedWallpaperId.isBlank()) return false;
+        if (defaultWallpaperId == null || defaultWallpaperId.isBlank()) return false;
+        selectedWallpaperId = defaultWallpaperId.trim();
+        return true;
+    }
+
+    public static Path packDirectory(Path configDirectory) {
+        return configDirectory.resolve("wallpaper-menu/packs");
+    }
+
+    public static Path packManifest(Path configDirectory) {
+        return configDirectory.resolve("wallpaper-menu/pack.json");
+    }
     public int wallpaperFps = 60;
     public boolean audioEnabled; // Legacy configuration migration only.
     public int audioVolumePercent = -1;
@@ -56,5 +72,12 @@ public final class WallpaperConfig {
                 .filter(path -> !path.isBlank())
                 .map(Path::of)
                 .toList();
+    }
+
+    public List<Path> wallpaperRoots(Path configDirectory) {
+        java.util.ArrayList<Path> roots = new java.util.ArrayList<>();
+        roots.add(packDirectory(configDirectory));
+        roots.addAll(wallpaperRoots());
+        return List.copyOf(roots);
     }
 }

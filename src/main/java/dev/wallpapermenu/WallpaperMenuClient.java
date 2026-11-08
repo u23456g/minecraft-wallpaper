@@ -29,6 +29,7 @@ public final class WallpaperMenuClient implements ClientModInitializer {
         dev.wallpapermenu.wallpaper.MediaSession.start();
         var configFile = FabricLoader.getInstance().getConfigDir().resolve("wallpaper-menu.json");
         CONFIG = WallpaperConfig.load(configFile);
+        applyPackManifest(FabricLoader.getInstance().getConfigDir());
         net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_CLIENT_TICK.register(client -> {
             var music = client.options.getSoundVolumeOption(net.minecraft.sound.SoundCategory.MUSIC);
             if (CONFIG.audioVolume() > 0) {
@@ -67,7 +68,8 @@ public final class WallpaperMenuClient implements ClientModInitializer {
             LOGGER.warn("Could not save wallpaper config; using in-memory settings", exception);
         }
         WallpaperConfig config = CONFIG;
-        java.util.concurrent.CompletableFuture.supplyAsync(() -> new WallpaperScanner().scan(config.wallpaperRoots()))
+        Path configDirectory = FabricLoader.getInstance().getConfigDir();
+        java.util.concurrent.CompletableFuture.supplyAsync(() -> new WallpaperScanner().scan(config.wallpaperRoots(configDirectory)))
                 .thenAccept(entries -> {
                     WALLPAPERS = List.copyOf(entries);
                     LOGGER.info("Wallpaper Menu found {} supported wallpaper(s)", WALLPAPERS.stream().filter(WallpaperEntry::supported).count());
@@ -76,6 +78,20 @@ public final class WallpaperMenuClient implements ClientModInitializer {
                     LOGGER.warn("Wallpaper scan failed; keeping vanilla menu background", error);
                     return null;
                 });
+    }
+
+    private static void applyPackManifest(Path configDirectory) {
+        Path manifest = WallpaperConfig.packManifest(configDirectory);
+        if (!java.nio.file.Files.isRegularFile(manifest)) return;
+        try {
+            var json = com.google.gson.JsonParser.parseString(java.nio.file.Files.readString(manifest)).getAsJsonObject();
+            if (json.has("defaultWallpaperId") && json.get("defaultWallpaperId").isJsonPrimitive()) {
+                CONFIG.defaultWallpaperId = json.get("defaultWallpaperId").getAsString();
+                CONFIG.applyPackDefaults();
+            }
+        } catch (Exception exception) {
+            LOGGER.warn("Ignoring invalid wallpaper pack manifest {}", manifest, exception);
+        }
     }
 
     static List<Path> defaultSteamRoots() {

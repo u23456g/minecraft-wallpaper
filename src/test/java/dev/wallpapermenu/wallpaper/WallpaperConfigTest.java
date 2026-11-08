@@ -9,10 +9,27 @@ import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class WallpaperConfigTest {
     @TempDir
     Path tempDir;
+
+    @Test
+    void packDefaultIsAppliedOnlyWhenPlayerHasNoSelection() {
+        WallpaperConfig config = new WallpaperConfig();
+        config.defaultWallpaperId = "workshop-123";
+        assertTrue(config.applyPackDefaults());
+        assertEquals("workshop-123", config.selectedWallpaperId);
+        assertFalse(config.applyPackDefaults());
+
+        config.selectedWallpaperId = "player-choice";
+        config.defaultWallpaperId = "pack-choice";
+        assertFalse(config.applyPackDefaults());
+        assertEquals("player-choice", config.selectedWallpaperId);
+        assertEquals(Path.of("config", "wallpaper-menu", "packs"),
+                WallpaperConfig.packDirectory(Path.of("config")));
+    }
 
     @Test
     void savesAndReloadsSettingsAndFallsBackOnInvalidJson() throws IOException {

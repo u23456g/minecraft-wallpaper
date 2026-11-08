@@ -2,6 +2,7 @@ package dev.wallpapermenu;
 
 import dev.wallpapermenu.wallpaper.SteamWallpaperLocator;
 import dev.wallpapermenu.wallpaper.WallpaperEntry;
+import dev.wallpapermenu.wallpaper.WallpaperConfig;
 import dev.wallpapermenu.wallpaper.WallpaperScanner;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.DrawContext;
@@ -76,7 +77,7 @@ public final class WallpaperSettingsScreen extends Screen {
 
         int step = Math.min(24, (height - 48) / 9);
         int y = 42;
-        ButtonWidget scan = ButtonWidget.builder(Text.literal(scanning ? "扫描中…" : "扫描 Steam 壁纸"), button -> rescan())
+        ButtonWidget scan = ButtonWidget.builder(Text.literal(scanning ? "扫描中…" : "扫描壁纸目录"), button -> rescan())
                 .dimensions(controlsX, y, controlsWidth, 20).build();
         scan.active = !scanning;
         addDrawableChild(scan);
@@ -169,7 +170,8 @@ public final class WallpaperSettingsScreen extends Screen {
         clearAndInit();
         var minecraft = client;
         CompletableFuture.supplyAsync(() -> {
-            List<Path> discovered = SteamWallpaperLocator.discover(WallpaperMenuClient.defaultSteamRoots());
+            List<Path> discovered = new java.util.ArrayList<>(SteamWallpaperLocator.discover(WallpaperMenuClient.defaultSteamRoots()));
+            discovered.add(WallpaperConfig.packDirectory(FabricLoader.getInstance().getConfigDir()));
             return new ScanResult(discovered, new WallpaperScanner().scan(discovered));
         }).whenComplete((result, error) -> minecraft.execute(() -> {
             scanning = false;
